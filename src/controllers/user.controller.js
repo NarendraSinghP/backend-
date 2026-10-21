@@ -426,6 +426,8 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
     )
 })
 
+// channel is a array so we are using channel[0] to get the first element of the array.
+
 const getWatchHistory = asyncHandler(async(req, res) => {
     const user = await User.aggregate([
         {

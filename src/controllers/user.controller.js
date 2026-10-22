@@ -394,6 +394,10 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
                 isSubscribed: {
                     $cond: {
                         if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                        // this in operator checks if the current user is in the list of subscribers for this channel and it can check in array as well as in object. In this case, we are checking in array of objects and we are checking for the field subscriber in the object.
+
+                        // aggregate returns an array of objects 
+                        
                         then: true,
                         else: false
                     }

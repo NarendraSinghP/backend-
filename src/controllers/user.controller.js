@@ -432,11 +432,17 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
 
 // channel is a array so we are using channel[0] to get the first element of the array.
 
+
+// Now getWatchHistory function is used to get the watch history of the user. It uses aggregate function to get the watch history of the user. It uses $lookup to join the videos collection with the users collection to get the owner details of the video. 
+// it uses nested lookup to get the owner details of the video
+
 const getWatchHistory = asyncHandler(async(req, res) => {
     const user = await User.aggregate([
         {
             $match: {
                 _id: new mongoose.Types.ObjectId(req.user._id)
+                // when we do req.user._id, it is a string and we need to convert it to ObjectId to match with the _id field in the users collection. So we are using new mongoose.Types.ObjectId(req.user._id) to convert the string to ObjectId.
+                // in aggregation pipeline, we need to use new mongoose.Types.ObjectId() to convert the string to ObjectId. In normal query, we can use mongoose.Types.ObjectId() to convert the string to ObjectId. because in pipeline mongoose do not automatically convert the string to ObjectId. So we need to use new mongoose.Types.ObjectId() to convert the string to ObjectId.
             }
         },
         {
@@ -445,13 +451,19 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                 localField: "watchHistory",
                 foreignField: "_id",
                 as: "watchHistory",
+                // we can also use populate to get the owner details of the video but populate is not efficient as it makes multiple queries to the database. So we are using aggregate function to get the owner details of the video in a single query. So we are using $lookup to join the videos collection with the users collection to get the owner details of the video.
+
+                // this pipeline is called sub-pipeline
                 pipeline: [
                     {
                         $lookup: {
                             from: "users",
+                            // from tells the collection to join with. In this case, we are joining the users collection with the videos collection to get the owner details of the video.
                             localField: "owner",
+                            // whereas localfield tells the field in the videos collection to join with the users collection. In this case, we are joining the owner field in the videos collection with the _id field in the users collection to get the owner details of the video.
                             foreignField: "_id",
                             as: "owner",
+                            // as we got many things in the owner field, we can use $project to get only the required fields from the owner field. In this case, we are getting only fullName, username and avatar from the owner field. so we are writing a nested pipeline to get only the required fields from the owner field.
                             pipeline: [
                                 {
                                     $project: {
@@ -461,6 +473,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                                     }
                                 }
                             ]
+                            // field = $
                         }
                     },
                     {
